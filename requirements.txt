@@ -1,0 +1,9 @@
+%%writefile requirements.txt
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+spacy
+joblib
+pydantic
