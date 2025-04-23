@@ -1,207 +1,118 @@
-#  Email Classification with PII Masking (Jupyter Workflow)
 
-# 📄 README.
+# PII Masking and Email Classification API
 
-"""
-## Email Classification
+This project provides an API to mask Personally Identifiable Information (PII) in email bodies and classify the email content. It uses a combination of regex-based entity detection and SpaCy for named entity recognition.
 
-This project implements an email classification system  using machine learning. It includes:
-- PII masking (without LLMs)
-- Email categorization using Logistic Regression
-- FastAPI deployment
+## Features
 
-### Features
-- Masks PII such as full names, emails, phone numbers, aadhar, card numbers, CVVs, DOB, expiry dates
-- Trains a classification model to categorize support emails into predefined types
-- Provides a `/classify` POST endpoint via FastAPI
-- Fully ready for deployment on Hugging Face Spaces
+- **PII Masking**: Masks sensitive information like phone numbers, email addresses, Aadhar numbers, credit/debit card details, CVV, expiry dates, and date of birth.
+- **Entity Detection**: Identifies and masks full names using SpaCy's named entity recognition.
+- **Email Classification**: Classifies the email based on the content after masking PII entities using a trained machine learning model.
 
-###  File Structure
-```
-├── api.py                # FastAPI interface
-├── models.py             # Classifier and vectorizer loading (if split)
-├── utils.py              # Masking functions
-├── train_model.py        # Optional training script
-├── email_classifier.pkl  # Trained model
-├── vectorizer.pkl        # TF-IDF vectorizer
-├── requirements.txt      # All dependencies
-├── email_classification_solution.ipynb  # Main notebook
-├── README.md             # You're reading it
+## Technologies Used
+
+- **FastAPI**: Web framework to create the API.
+- **SpaCy**: NLP library for named entity recognition (NER).
+- **Regex**: Used for detecting and masking PII entities in text.
+- **Scikit-learn**: Machine learning library for email classification.
+- **Pickle**: Serialization library for loading pre-trained model components.
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
 ```
 
-### Requirements
-- Python 
-- FastAPI, spaCy, pandas, scikit-learn, joblib, uvicorn
+### 2. Download SpaCy Model
 
-### How to Use
-1. Clone this repo and install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Run the API locally:
-   ```bash
-   uvicorn api:app --reload
-   ```
-3. Test API with curl or Swagger at `http://localhost:8000/docs`
+```bash
+python -m spacy download xx_ent_wiki_sm
+```
 
-### Test Input
+### 3. Load Pre-trained Model Components
+
+Ensure the following files are available in your project directory:
+
+- `classifier.pkl`: Trained model for email classification.
+- `vectorizer.pkl`: Trained vectorizer for transforming text data.
+- `label_encoder.pkl`: Label encoder for mapping predicted labels back to their original form.
+
+### 4. Deploy on Hugging Face
+
+To deploy the FastAPI app on Hugging Face Spaces, follow these steps:
+
+1. **Create a Hugging Face account** (if you don’t have one).
+2. **Create a new Space**:
+   - Go to your [Hugging Face Spaces](https://huggingface.co/spaces) and create a new space.
+   - Select the **FastAPI** template.
+
+3. **Push Your Code to Hugging Face**:
+   - Clone your newly created Hugging Face Space repository.
+   - Push your local code (including `api.py`, `requirements.txt`, and model files like `classifier.pkl`, `vectorizer.pkl`, `label_encoder.pkl`) to the repository.
+
+4. **Start the FastAPI App**:
+   - Hugging Face will automatically detect the FastAPI app and deploy it.
+   - Your FastAPI server will be available at the Hugging Face URL provided for your space.
+
+## API Endpoints
+
+### POST `/predict`
+
+Classify an email and mask PII entities.
+
+#### Request Body:
+
 ```json
 {
-  "email_body": "Hi, my name is Meera. My email is Meera@example.com and I need help with balance checking."
+  "email_body": "Your email body content goes here."
 }
 ```
 
-### Expected Output
+#### Response:
+
 ```json
 {
-  "input_email_body": "Hi, my name is Meera...",
-  "list_of_masked_entities": [...],
-  "masked_email": "Hi, my name is [full_name]...",
-  "category_of_the_email": "Balance Issues"
+    "input_email_body": "Original email body",
+    "list_of_masked_entities": [
+        {
+            "position": [start, end],
+            "classification": "entity_type",
+            "entity": "masked_entity"
+        }
+    ],
+    "masked_email": "Masked email body",
+    "category_of_the_email": "Predicted email category"
 }
 ```
 
-### Notes.
-- The model handles both seen and unseen (hidden) test cases.
-"""
+## Example Usage
 
-# ------------------------------------
-# 🔹 STEP 1: INSTALL & IMPORT LIBRARIES
-# ------------------------------------
-# Install these in Jupyter using !pip (only once)
-!pip install pandas numpy scikit-learn spacy fastapi uvicorn pydantic joblib
-!python -m spacy download en_core_web_sm
+Example request to classify an email:
 
-# Import all necessary modules
-import pandas as pd
-import numpy as np
-import re
-import spacy
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.classifier import logisticregression
-from sklearn.metrics import classification_report
-import joblib
+```json
+{
+  "email_body": "Subject: i am rahul my phone number is +91-9999034566 and adhar number 55554444 5555 3333"
+}
+```
 
-# Load SpaCy model
-nlp = spacy.load("en_core_web_sm")
+The response will contain masked entities like phone number and Aadhar number, and the predicted category of the email.
 
-# ------------------------------------
-# 🔹 STEP 2: LOAD DATASET FROM CSV
-# ------------------------------------
-# Load your CSV file with columns: email_body, category
-csv_path = r"C:\Users\pavin\OneDrive\Desktop\combined_emails_with_natural_pii.csv"  # Replace with your actual file path
-df = pd.read_csv(csv_path)
-df.head()
+## File Structure
 
+```plaintext
+project/
+│
+├── api.py                  # FastAPI application containing routes and logic
+├── classifier.pkl          # Pre-trained email classifier model
+├── vectorizer.pkl          # Pre-trained vectorizer for email text transformation
+├── label_encoder.pkl       # Pre-trained label encoder
+├── requirements.txt        # Python dependencies for the project
+├── README.md               # Project documentation
+└── Dockerfile              # (Optional) Dockerfile for containerized deployment (if needed)
+```
 
+## License
 
-# ------------------------------------
-# 🔹 STEP 3: DEFINE PII MASKING FUNCTION
-# ------------------------------------
-def mask_pii(text):
-    masked_text = text
-    entities_list = []
-
-    # Regex patterns for PII
-    patterns = {
-        'email': r'[\w\.-]+@[\w\.-]+',
-        'phone_number': r'\b\d{10}\b',
-        'aadhar_num': r'\b\d{4} \d{4} \d{4}\b',
-        'credit_debit_no': r'\b(?:\d{4}[- ]?){3}\d{4}\b',
-        'cvv_no': r'\b\d{3}\b',
-        'expiry_no': r'\b(0[1-9]|1[0-2])/?([0-9]{2})\b',
-        'dob': r'\b(?:\d{2}[-/]){2}\d{4}\b'
-    }
-
-    # Apply regex masking
-    for label, pattern in patterns.items():
-        for match in re.finditer(pattern, text):
-            entity = match.group()
-            start, end = match.span()
-            entities_list.append({"position": [start, end], "classification": label, "entity": entity})
-            masked_text = masked_text.replace(entity, f"[{label}]")
-
-    # Use SpaCy for name detection
-    doc = nlp(text)
-    for ent in doc.ents:
-        if ent.label_ == "PERSON":
-            start, end = ent.start_char, ent.end_char
-            entity = ent.text
-            entities_list.append({"position": [start, end], "classification": "full_name", "entity": entity})
-            masked_text = masked_text.replace(entity, "[full_name]")
-
-    return masked_text, entities_list
-
-# ------------------------------------
-# 🔹 STEP 4: MASK DATASET
-# ------------------------------------
-# Apply masking to the dataset
-df['masked_body'] = df['email'].apply(lambda x: mask_pii(x)[0])
-
-# ------------------------------------
-# 🔹 STEP 5: TEXT VECTORIZATION + SPLIT
-# ------------------------------------
-# Convert text to vectors
-vectorizer = TfidfVectorizer()
-X = vectorizer.fit_transform(df['masked_body'])
-y = df['type']
-
-# Split data for training and testing
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# ------------------------------------
-# 🔹 STEP 6: TRAIN CLASSIFICATION MODEL
-# ------------------------------------
-# Using logistic regression
-model = logistic regression
-model.fit(X_train, y_train)
-
-# Evaluate
-y_pred = model.predict(X_test)
-print(classification_report(y_test, y_pred))
-
-# ------------------------------------
-# 🔹 STEP 7: SAVE MODEL,VECTORIZER
-# ------------------------------------
-joblib.dump(model, 'email_classifier.pkl')
-joblib.dump(vectorizer, 'vectorizer.pkl')
-
-# ------------------------------------
-# 🔹 STEP 8: FINAL PROCESSING FUNCTION
-# ------------------------------------
-def classify_email(email_text):
-    masked_email, entities = mask_pii(email_text)
-    vec = vectorizer.transform([masked_email])
-    category = model.predict(vec)[0]
-    return {
-        "input_email_body": email_text,
-        "list_of_masked_entities": entities,
-        "masked_email": masked_email,
-        "category_of_the_email": category
-    }
-
-
-
-for i, email in enumerate(hidden_tests, 1):
-    print(f"
-Test Case {i}:")
-    result = classify_email(email)
-    print(result)
-
-# ------------------------------------
-# 🔹 STEP 9: FASTAPI MOCKUP FOR DEPLOYMENT
-# ------------------------------------
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-app = FastAPI()
-
-class EmailInput(BaseModel):
-    email_body: str
-
-@app.post("/classify")
-def classify(input: EmailInput):
-    return classify_email(input.email_body)
-
-# Run with: uvicorn filename:app --reload
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
