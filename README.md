@@ -1,22 +1,22 @@
 #  Email Classification with PII Masking (Jupyter Workflow)
 
-# 📄 README.md (For GitHub or Submission)
+# 📄 README.
 
 """
-## 📧 Email Classification
+## Email Classification
 
 This project implements an email classification system for support tickets using machine learning. It includes:
 - PII masking (without LLMs)
 - Email categorization using Logistic Regression
 - FastAPI deployment
 
-### 🚀 Features
+### Features
 - Masks PII such as full names, emails, phone numbers, aadhar, card numbers, CVVs, DOB, expiry dates
 - Trains a classification model to categorize support emails into predefined types
 - Provides a `/classify` POST endpoint via FastAPI
 - Fully ready for deployment on Hugging Face Spaces
 
-### 📂 File Structure
+###  File Structure
 ```
 ├── api.py                # FastAPI interface
 ├── models.py             # Classifier and vectorizer loading (if split)
@@ -29,11 +29,11 @@ This project implements an email classification system for support tickets using
 ├── README.md             # You're reading it
 ```
 
-### 📦 Requirements
+### Requirements
 - Python 3.8+
 - FastAPI, spaCy, pandas, scikit-learn, joblib, uvicorn
 
-### 📬 How to Use
+### How to Use
 1. Clone this repo and install dependencies:
    ```bash
    pip install -r requirements.txt
@@ -51,7 +51,7 @@ This project implements an email classification system for support tickets using
 }
 ```
 
-### ✅ Expected Output
+### Expected Output
 ```json
 {
   "input_email_body": "Hi, my name is John...",
@@ -61,7 +61,7 @@ This project implements an email classification system for support tickets using
 }
 ```
 
-### 🧠 Notes.
+### Notes.
 - The model handles both seen and unseen (hidden) test cases.
 """
 
