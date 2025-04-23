@@ -1,118 +1,95 @@
+Email Classification and PII Masking API
+This project provides an API that classifies emails and masks Personally Identifiable Information (PII) entities in the email text. It uses machine learning to classify emails into various categories and performs PII masking using predefined regular expressions and a multilingual SpaCy model.
 
-# PII Masking and Email Classification API
+File Structure
+graphql
+Copy
+Edit
+.
+├── app.py            # FastAPI application to serve the model
+├── api.py            # API handler for predictions
+├── models.py         # Contains model training and utility functions
+├── utils.py          # Utility functions for processing and masking PII
+├── requirements.txt  # Required Python libraries
+└── README.md         # Project documentation
+Setup and Requirements
+Clone the repository or download the necessary files.
 
-This project provides an API to mask Personally Identifiable Information (PII) in email bodies and classify the email content. It uses a combination of regex-based entity detection and SpaCy for named entity recognition.
+Install the required dependencies by running the following command:
 
-## Features
-
-- **PII Masking**: Masks sensitive information like phone numbers, email addresses, Aadhar numbers, credit/debit card details, CVV, expiry dates, and date of birth.
-- **Entity Detection**: Identifies and masks full names using SpaCy's named entity recognition.
-- **Email Classification**: Classifies the email based on the content after masking PII entities using a trained machine learning model.
-
-## Technologies Used
-
-- **FastAPI**: Web framework to create the API.
-- **SpaCy**: NLP library for named entity recognition (NER).
-- **Regex**: Used for detecting and masking PII entities in text.
-- **Scikit-learn**: Machine learning library for email classification.
-- **Pickle**: Serialization library for loading pre-trained model components.
-
-## Setup
-
-### 1. Install Dependencies
-
-```bash
+bash
+Copy
+Edit
 pip install -r requirements.txt
-```
+Hugging Face Deployment
+You can use the API hosted on Hugging Face. It accepts POST requests with the email body and returns a response with classified information and masked PII entities.
 
-### 2. Download SpaCy Model
+Hugging Face URL
+The deployed API is available at:
 
-```bash
-python -m spacy download xx_ent_wiki_sm
-```
+https://gayathrisoorya-email-classification-new.hf.space/predict
 
-### 3. Load Pre-trained Model Components
+Example Usage with Postman
+Make a POST request to the URL:
 
-Ensure the following files are available in your project directory:
+nginx
+Copy
+Edit
+POST https://gayathrisoorya-email-classification-new.hf.space/predict
+Set the request body with JSON content like below:
 
-- `classifier.pkl`: Trained model for email classification.
-- `vectorizer.pkl`: Trained vectorizer for transforming text data.
-- `label_encoder.pkl`: Label encoder for mapping predicted labels back to their original form.
-
-### 4. Deploy on Hugging Face
-
-To deploy the FastAPI app on Hugging Face Spaces, follow these steps:
-
-1. **Create a Hugging Face account** (if you don’t have one).
-2. **Create a new Space**:
-   - Go to your [Hugging Face Spaces](https://huggingface.co/spaces) and create a new space.
-   - Select the **FastAPI** template.
-
-3. **Push Your Code to Hugging Face**:
-   - Clone your newly created Hugging Face Space repository.
-   - Push your local code (including `api.py`, `requirements.txt`, and model files like `classifier.pkl`, `vectorizer.pkl`, `label_encoder.pkl`) to the repository.
-
-4. **Start the FastAPI App**:
-   - Hugging Face will automatically detect the FastAPI app and deploy it.
-   - Your FastAPI server will be available at the Hugging Face URL provided for your space.
-
-## API Endpoints
-
-### POST `/predict`
-
-Classify an email and mask PII entities.
-
-#### Request Body:
-
-```json
+json
+Copy
+Edit
 {
-  "email_body": "Your email body content goes here."
+    "email_body": "Subject: Inquiry About Data Analytics Services for Investment Portfolio Optimization\n\nHello Customer Support, I hope this message finds you well. I am writing to seek detailed information about your company's data analytics services aimed at enhancing the optimization of investment portfolios. You can reach me at elena.ivanova@support.org. I am keen to understand how your services can aid in making prudent investment decisions and in boosting potential returns. Could you provide more details about the analytics services you offer, including portfolio optimization, risk management, and performance measurement? I would additionally appreciate any examples or case studies illustrating how these services have been beneficial to other clients. Furthermore, could you inform me of the specific data and information you need to initiate our service cooperation? I am eagerly looking forward to your response and to learning more about how your company can optimize my investment portfolio. My name is Omar Hassan. Thanks for your support and time."
 }
-```
+Response will include:
 
-#### Response:
+The original email text with PII masked.
 
-```json
+A list of the detected PII entities (e.g., phone number, email, full name).
+
+The category (e.g., Request).
+
+Example Response
+json
+Copy
+Edit
 {
-    "input_email_body": "Original email body",
-    "list_of_masked_entities": [
-        {
-            "position": [start, end],
-            "classification": "entity_type",
-            "entity": "masked_entity"
-        }
-    ],
-    "masked_email": "Masked email body",
-    "category_of_the_email": "Predicted email category"
+  "input_email_body": "Subject: Inquiry About Data Analytics Services for Investment Portfolio Optimization\n\nHello Customer Support, I hope this message finds you well. I am writing to seek detailed information about your company's data analytics services aimed at enhancing the optimization of investment portfolios. You can reach me at elena.ivanova@support.org. I am keen to understand how your services can aid in making prudent investment decisions and in boosting potential returns. Could you provide more details about the analytics services you offer, including portfolio optimization, risk management, and performance measurement? I would additionally appreciate any examples or case studies illustrating how these services have been beneficial to other clients. Furthermore, could you inform me of the specific data and information you need to initiate our service cooperation? I am eagerly looking forward to your response and to learning more about how your company can optimize my investment portfolio. My name is Omar Hassan. Thanks for your support and time.",
+  "list_of_masked_entities": [
+    {"position": [124, 149], "classification": "email", "entity": "elena.ivanova@support.org"},
+    {"position": [601, 614], "classification": "full_name", "entity": "Omar Hassan"}
+  ],
+  "masked_email": "Subject: Inquiry About Data Analytics Services for Investment Portfolio Optimization\n\nHello Customer Support, I hope this message finds you well. I am writing to seek detailed information about your company's data analytics services aimed at enhancing the optimization of investment portfolios. You can reach me at [email]. I am keen to understand how your services can aid in making prudent investment decisions and in boosting potential returns. Could you provide more details about the analytics services you offer, including portfolio optimization, risk management, and performance measurement? I would additionally appreciate any examples or case studies illustrating how these services have been beneficial to other clients. Furthermore, could you inform me of the specific data and information you need to initiate our service cooperation? I am eagerly looking forward to your response and to learning more about how your company can optimize my investment portfolio. My name is [full_name]. Thanks for your support and time.",
+  "category_of_the_email": "Request"
 }
-```
+Running the Model Locally
+For local deployment or testing, you can follow these steps to download and save the model files (classifier.pkl, vectorizer.pkl, label_encoder.pkl) from the Hugging Face space:
 
-## Example Usage
+Download the model files using the script provided in models.py. This will save the files locally and can be used for local testing or deployment.
 
-Example request to classify an email:
+Run the FastAPI application using uvicorn or any other ASGI server:
 
-```json
-{
-  "email_body": "Subject: i am rahul my phone number is +91-9999034566 and adhar number 55554444 5555 3333"
-}
-```
+bash
+Copy
+Edit
+uvicorn app:app --reload
+Send POST requests as outlined above.
 
-The response will contain masked entities like phone number and Aadhar number, and the predicted category of the email.
+File Descriptions
+app.py
+This is the main FastAPI application file that serves the email classification and PII masking API.
 
-## File Structure
+api.py
+Handles the logic for predicting email classifications and masking PII.
 
-```plaintext
-project/
-│
-├── api.py                  # FastAPI application containing routes and logic
-├── classifier.pkl          # Pre-trained email classifier model
-├── vectorizer.pkl          # Pre-trained vectorizer for email text transformation
-├── label_encoder.pkl       # Pre-trained label encoder
-├── requirements.txt        # Python dependencies for the project
-├── README.md               # Project documentation
-└── Dockerfile              # (Optional) Dockerfile for containerized deployment (if needed)
-```
+models.py
+Contains functions for downloading and saving the trained model files (.pkl files).
 
-## License
+utils.py
+Provides utility functions for PII masking and entity detection.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+requirements.txt
+Lists the dependencies required to run the project.
