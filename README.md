@@ -1,13 +1,13 @@
-# 📧 Akaike Assignment - Email Classification with PII Masking (Jupyter Workflow)
+#  Email Classification with PII Masking (Jupyter Workflow)
 
 # 📄 README.md (For GitHub or Submission)
 
 """
-## 📧 Email Classification Assignment - Akaike Technologies
+## 📧 Email Classification
 
 This project implements an email classification system for support tickets using machine learning. It includes:
 - PII masking (without LLMs)
-- Email categorization using Naive Bayes
+- Email categorization using Logistic Regression
 - FastAPI deployment
 
 ### 🚀 Features
@@ -61,8 +61,7 @@ This project implements an email classification system for support tickets using
 }
 ```
 
-### 🧠 Notes
-- This project was completed as part of Akaike Technologies' internship assignment.
+### 🧠 Notes.
 - The model handles both seen and unseen (hidden) test cases.
 """
 
@@ -80,7 +79,7 @@ import re
 import spacy
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.classifier import logisticregression
 from sklearn.metrics import classification_report
 import joblib
 
