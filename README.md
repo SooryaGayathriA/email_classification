@@ -30,7 +30,7 @@ This project implements an email classification system for support tickets using
 ```
 
 ### Requirements
-- Python 3.8+
+- Python 
 - FastAPI, spaCy, pandas, scikit-learn, joblib, uvicorn
 
 ### How to Use
@@ -44,20 +44,20 @@ This project implements an email classification system for support tickets using
    ```
 3. Test API with curl or Swagger at `http://localhost:8000/docs`
 
-### 🧪 Test Input
+### Test Input
 ```json
 {
-  "email_body": "Hi, my name is John. My email is john@example.com and I need help with billing."
+  "email_body": "Hi, my name is Meera. My email is Meera@example.com and I need help with balance checking."
 }
 ```
 
 ### Expected Output
 ```json
 {
-  "input_email_body": "Hi, my name is John...",
+  "input_email_body": "Hi, my name is Meera...",
   "list_of_masked_entities": [...],
   "masked_email": "Hi, my name is [full_name]...",
-  "category_of_the_email": "Billing Issues"
+  "category_of_the_email": "Balance Issues"
 }
 ```
 
@@ -153,8 +153,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # ------------------------------------
 # 🔹 STEP 6: TRAIN CLASSIFICATION MODEL
 # ------------------------------------
-# Using Multinomial Naive Bayes as a baseline
-model = MultinomialNB()
+# Using logistic regression
+model = logistic regression
 model.fit(X_train, y_train)
 
 # Evaluate
@@ -162,7 +162,7 @@ y_pred = model.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 # ------------------------------------
-# 🔹 STEP 7: SAVE MODEL + VECTORIZER
+# 🔹 STEP 7: SAVE MODEL,VECTORIZER
 # ------------------------------------
 joblib.dump(model, 'email_classifier.pkl')
 joblib.dump(vectorizer, 'vectorizer.pkl')
@@ -181,14 +181,7 @@ def classify_email(email_text):
         "category_of_the_email": category
     }
 
-# ✅ Hidden test cases
-hidden_tests = [
-    "Phone: +91 9876543210. Help with login.",
-    "DOB is 05/12/1994, card 1234 5678 9012 3456.",
-    "Name: K. L. Rahul. Email: krahul@mail.com",
-    "My CVV is 123, card ends 4567",
-    "Billing error again, second time charged"
-]
+
 
 for i, email in enumerate(hidden_tests, 1):
     print(f"
