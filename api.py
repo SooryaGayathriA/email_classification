@@ -3,7 +3,7 @@
 
 # In[ ]:
 
-
+import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
@@ -30,7 +30,7 @@ def mask_pii(text):
     patterns = {
         'email': r'[\w\.-]+@[\w\.-]+',
         'phone_number': r'\b\d{10}\b',
-        'aadhar_num': r'\b\d{4} \d{4} \d{4}\b',
+        'aadhar_num': r'\b\d{4} \d{4} \d{4} \d{4}\b',
         'credit_debit_no': r'\b(?:\d{4}[- ]?){3}\d{4}\b',
         'cvv_no': r'\b\d{3}\b',
         'expiry_no': r'\b(0[1-9]|1[0-2])/?([0-9]{2})\b',
@@ -54,14 +54,19 @@ def mask_pii(text):
 
     return masked_text, entities_list
 
-# Classification endpoint
+categories = ['Change', 'Incident', 'Problem', 'Request']
+
 @app.post("/classify")
 def classify(input: EmailInput):
     text = input.email_body
     masked_text, entities = mask_pii(text)
     X = vectorizer.transform([masked_text])
     category = model.predict(X)[0]
-
+ 
+    
+    # Ensure that the category is a regular integer, not a numpy.int32
+    category = int(category)
+    category = categories[category]  # Map index to category name
     return {
         "input_email_body": text,
         "list_of_masked_entities": entities,
@@ -69,3 +74,7 @@ def classify(input: EmailInput):
         "category_of_the_email": category
     }
 
+
+@app.get("/")
+def read_root():
+    return {"message": "API is running. Use POST /classify with email_body."}
