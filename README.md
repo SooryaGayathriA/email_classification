@@ -5,7 +5,7 @@
 """
 ## Email Classification
 
-This project implements an email classification system for support tickets using machine learning. It includes:
+This project implements an email classification system  using machine learning. It includes:
 - PII masking (without LLMs)
 - Email categorization using Logistic Regression
 - FastAPI deployment
